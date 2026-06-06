@@ -1,14 +1,16 @@
 """Pydantic models for HIIK-style article and conflict-event parameters."""
 
-from typing import Optional
-from pydantic import BaseModel, Field
-from pydantic_models.article_corpus_model import ArticleCorpus, Article
 from enum import Enum
+from typing import Optional
+
+from pydantic import BaseModel, Field
+
+from hiik_helper.pydantic_models.article_corpus_model import ArticleCorpus, Article
 
 
 class HiikCorpus(BaseModel):
     """
-    This class is used to store the HIIK corpus of articles and their respective parameters as defined by the HIIK.
+    Store HIIK articles and their extracted conflict-event parameters.
     """
 
     class HiikArticle(BaseModel):
@@ -28,13 +30,15 @@ class HiikCorpus(BaseModel):
 
             class Actor(BaseModel):
                 actor_name: str = Field(
-                    "Name of the actor involved in the events, e.g. ISIS subgroup, Myanmar military, etc."
+                    description="Name of the actor involved in the events, e.g. ISIS subgroup, Myanmar military, etc."
                 )
                 affiliation: Optional[str] = Field(
-                    "Affiliation of the actor, e.g. government, rebel group, ISIS, etc."
+                    default=None,
+                    description="Affiliation of the actor, e.g. government, rebel group, ISIS, etc.",
                 )
                 additional_attributes: Optional[str] = Field(
-                    "Additional attributes of the actor, e.g. Christian, jobless, etc."
+                    default=None,
+                    description="Additional attributes of the actor, e.g. Christian, jobless, etc.",
                 )
 
             class PeopleInvolved(BaseModel):
@@ -68,7 +72,10 @@ class HiikCorpus(BaseModel):
 
             class WeaponsUsed(BaseModel):
                 weapons: list[str] = Field(
-                    description="List of weapon classes and their specific weapons, e.g. Heavy Weapons (Jets; Helicopters) and/or Light Weapons (Guns, Torches) etc."
+                    description=(
+                        "List of weapon classes and specific weapons, e.g. "
+                        "Heavy Weapons (Jets; Helicopters) or Light Weapons."
+                    )
                 )
 
             date_of_events: str = Field(
@@ -78,10 +85,16 @@ class HiikCorpus(BaseModel):
             actor_a: Actor = Field(description="Actor A involved in the events.")
             actor_b: Actor = Field(description="Actor A involved in the events.")
             issue: str = Field(
-                description="Issue that was the catalyst for the events like the implementation of a controversial law, the imprisonment of a political figure, etc."
+                description=(
+                    "Issue that catalyzed the events, such as a controversial "
+                    "law or the imprisonment of a political figure."
+                )
             )
             description: str = Field(
-                description="Description of the events, what happened, how many people were involved, when did it happen, etc. should be brief and concise but informative"
+                description=(
+                    "Brief description of what happened, when it happened, "
+                    "and how many people were involved."
+                )
             )
             country: str = Field(
                 description="Country or countries where the events took place"
@@ -96,7 +109,10 @@ class HiikCorpus(BaseModel):
                 description="List of the weapons used in the events."
             )
             personnel: PersonnelType = Field(
-                description="Personnel actively involved in the events (refugees and victims do not count towards this), can be Under 50, 50-400, Over 400"
+                description=(
+                    "Personnel actively involved in the events, excluding "
+                    "refugees and victims."
+                )
             )
             fatalities: list[PeopleInvolved] = Field(
                 description="Number of fatalities and the group of people involved"
@@ -108,25 +124,28 @@ class HiikCorpus(BaseModel):
                 description="Number of refugees/IDP and the group of people involved"
             )
             destruction: list[ObjectDestroyed] = Field(
-                description="Objects destroyed or harmed during the events. Only actual damage, not potential or psychological damage."
+                description=(
+                    "Objects destroyed or harmed during the events. Only "
+                    "actual damage counts."
+                )
             )
             comments: str = Field(
                 description="Any additional comments or notes about the events"
             )
 
-        article_content: Optional[Article] = Field(description="Article")
+        article_content: Optional[Article] = Field(default=None, description="Article")
         date_published: Optional[str] = Field(
-            description="Publication date of the article"
+            default=None, description="Publication date of the article"
         )
         date_accessed: Optional[str] = Field(
-            description="Date the article was accessed"
+            default=None, description="Date the article was accessed"
         )
         date_updated: Optional[str] = Field(
-            description="Date the article was last updated"
+            default=None, description="Date the article was last updated"
         )
-        url: Optional[str] = Field(description="URL of the article")
+        url: Optional[str] = Field(default=None, description="URL of the article")
         parameters: Optional[HiikParameters] = Field(
-            description="Parameters of the article"
+            default=None, description="Parameters of the article"
         )
 
     articles: list[HiikArticle]

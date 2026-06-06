@@ -1,3 +1,5 @@
+"""Scrapy settings for the HIIK Helper project."""
+
 # Scrapy settings for hiik_helper project
 #
 # For simplicity, this file contains only settings considered important or

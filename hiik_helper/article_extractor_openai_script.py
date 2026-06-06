@@ -1,27 +1,8 @@
 """Script helpers for preparing and parsing OpenAI HIIK extraction batches."""
 
-from article_extractor_openai import ArticleExtractor
-from pydantic_models.hiik_corpus import (
-    HiikCorpus,
-    read_article_corpus_into_hiik_articles,
-)
-from pydantic_models.article_corpus_model import read_json_to_article_corpus
-from utils import (
-    read_batch_output_jsonl_to_hiik_corpus,
-    read_batch_request_jsonl_to_article_dict,
-    save_hiik_corpus_to_jsonl,
-    read_hiik_corpus_jsonl_to_hiik_corpus,
-)
+from hiik_helper.utils import read_hiik_corpus_jsonl_to_hiik_corpus
 
-input_article_batch_file_path = "generated_articles.json"
-index = "C"
-output_batch_jsonl_path = (
-    f"data/extracted_articles/batch_data/parameter_extraction_batch_{index}.jsonl"
-)
-parameter_extracted_batch_path = (
-    f"data/extracted_articles/batch_data/extraction_{index}.jsonl"
-)
-saved_hiik_corpus_path = (
+SAVED_HIIK_CORPUS_PATH = (
     "data/extracted_articles/hiik_corpus/hiik_corpus_complete.jsonl"
 )
 
@@ -50,7 +31,7 @@ saved_hiik_corpus_path = (
 # save_hiik_corpus_to_jsonl(hiik_corpus=hiik_corpus, jsonl_path=saved_hiik_corpus_path)
 
 read_hiik_corpus = read_hiik_corpus_jsonl_to_hiik_corpus(
-    jsonl_path=saved_hiik_corpus_path
+    jsonl_path=SAVED_HIIK_CORPUS_PATH
 )
 
 

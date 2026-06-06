@@ -1,0 +1,9 @@
+{
+    "python.defaultInterpreterPath": "/Users/3nh/Library/Caches/pypoetry/virtualenvs/hiik-helper-sGFwFBDr-py3.13/bin/python",
+    "python.testing.pytestPath": "/Users/3nh/Library/Caches/pypoetry/virtualenvs/hiik-helper-sGFwFBDr-py3.13/bin/pytest",
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}

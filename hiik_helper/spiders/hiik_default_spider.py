@@ -1,18 +1,21 @@
 """Default Scrapy spider for discovering and extracting Karen News articles."""
 
-import scrapy
-import json
-import re
 import datetime
+import json
 import logging
+import re
+from pathlib import Path
 
-logger = logging.getLogger(__name__)
-
-
-from zoneinfo import ZoneInfo
+import scrapy
 from scrapy.linkextractors import LinkExtractor
 from scrapy.signals import spider_closed
 from scrapy.signalmanager import dispatcher
+
+
+logger = logging.getLogger(__name__)
+
+FOUND_ARTICLES_PATH = Path("found_articles.json")
+VISITED_URLS_PATH = Path("visited_urls.json")
 
 
 class HiikDefaultSpider(scrapy.Spider):
@@ -26,7 +29,7 @@ class HiikDefaultSpider(scrapy.Spider):
         """Initialize crawl targets, URL state, and extraction selectors."""
 
         logger.info("Initializing spider")
-        super(HiikDefaultSpider, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # Add spider close handler to save the found articles to a JSON file
         dispatcher.connect(self.spider_closing, signal=spider_closed)
 
@@ -45,11 +48,23 @@ class HiikDefaultSpider(scrapy.Spider):
         self.visited_urls_this_scrape = set()
 
         logger.info("Loading visited URLs from JSON")
-        # Load JSON file with URLs that we have already visited
-        with open("visited_urls.json", "r") as f:
-            self.visited_json_urls = json.load(f)
+        self.visited_json_urls = set(self.load_json_file(VISITED_URLS_PATH, []))
 
         logger.info("Spider initialized")
+
+    @staticmethod
+    def load_json_file(path: Path, default):
+        """Load a JSON file, creating it with a default value when missing."""
+
+        if not path.exists():
+            path.write_text(json.dumps(default, indent=4), encoding="utf-8")
+            return default.copy() if hasattr(default, "copy") else default
+
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            logger.warning("Could not parse %s; using an empty default.", path)
+            return default.copy() if hasattr(default, "copy") else default
 
     def parse(self, response):
         """Parse a response as an article or list page and follow article links."""
@@ -104,16 +119,14 @@ class HiikDefaultSpider(scrapy.Spider):
                 for supposed_article in article_list:
                     # Get the more link of the article
                     more_link_url = self.get_url_in_article(supposed_article)
-                    if self.link_is_article(more_link_url):
+                    if more_link_url and self.link_is_article(more_link_url):
                         article_links.add(more_link_url)
 
         extracted_links = self.link_extractor.extract_links(response)
         # Filter out the article links
 
         article_links = article_links.union(
-            set(
-                [link.url for link in extracted_links if self.link_is_article(link.url)]
-            )
+            {link.url for link in extracted_links if self.link_is_article(link.url)}
         )
 
         yield_links = [
@@ -160,10 +173,14 @@ class HiikDefaultSpider(scrapy.Spider):
     def link_is_article(self, url):
         """Return whether a URL matches the configured article URL patterns."""
 
+        if not url:
+            return False
+
         # Check if the link is an article
         for article_link_domain in self.article_link_domains:
             if article_link_domain in url:
                 return True
+        return False
 
     def article_contains_more_link(self, article):
         """Return whether an article excerpt contains a read-more link."""
@@ -176,8 +193,8 @@ class HiikDefaultSpider(scrapy.Spider):
         """Extract the first linked URL from a raw article excerpt."""
 
         # Get the more link in the article
-        url = re.findall(r'href="([^"]*)"', article)[0]
-        return url
+        urls = re.findall(r'href="([^"]*)"', article)
+        return urls[0] if urls else None
 
     def clean_text_from_html(self, text):
         """Remove HTML tags from a string."""
@@ -189,35 +206,30 @@ class HiikDefaultSpider(scrapy.Spider):
     def save_found_articles_to_json(self):
         """Merge newly found articles into `found_articles.json`."""
 
-        json_file_name = "found_articles.json"
-
         # Save the found articles to a JSON file
-        with open(json_file_name, "r") as f:
-            data = json.load(f)
+        data = self.load_json_file(FOUND_ARTICLES_PATH, {})
 
         data.update(self.found_articles)
 
-        with open(json_file_name, "w") as f:
+        with FOUND_ARTICLES_PATH.open("w", encoding="utf-8") as f:
             json.dump(data, f, indent=4)
 
     def save_visited_urls_to_json(self):
         """Persist URLs visited during this crawl into `visited_urls.json`."""
 
-        json_file_name = "visited_urls.json"
-
-        self.visited_json_urls.extend(self.visited_urls_this_scrape)
+        self.visited_json_urls.update(self.visited_urls_this_scrape)
 
         # Save the visited URLs to a JSON file
-        with open(json_file_name, "w") as f:
-            json.dump(list(self.visited_json_urls), f, indent=4)
+        with VISITED_URLS_PATH.open("w", encoding="utf-8") as f:
+            json.dump(sorted(self.visited_json_urls), f, indent=4)
 
     def spider_closing(self, spider):
         """Persist crawl state when Scrapy closes the spider."""
 
         logger.info("Spider closing")
 
-        logger.info(f"Saving visited URLs to JSON")
+        logger.info("Saving visited URLs to JSON")
         self.save_visited_urls_to_json()
 
-        logger.info(f"Saving found articles to JSON")
+        logger.info("Saving found articles to JSON")
         self.save_found_articles_to_json()

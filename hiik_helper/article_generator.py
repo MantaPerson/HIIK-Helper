@@ -1,14 +1,10 @@
 """OpenAI-backed synthetic article generation utilities."""
 
 import json
-import random
-from typing import Any
-from openai import OpenAI
 import os
-from instructor.batch import BatchJob
-from instructor import from_openai
+import random
 
-from pydantic_models.article_corpus_model import ArticleCorpus
+from hiik_helper.pydantic_models.article_corpus_model import ArticleCorpus
 
 
 class ArticleGenerator:
@@ -22,9 +18,10 @@ class ArticleGenerator:
         model_name: str = "gpt-4o-mini",
         temperature: float = 0.0,
     ):
-        """
-        Uses a GPT model to generate more articles based on the articles given in the JSON file under the path article_json_path.
-        This is done by using few shot prompting after choosing multiple random articles from the JSON file.
+        """Initialize the article generator.
+
+        The generator uses few-shot prompting with randomly sampled source
+        articles from ``article_json_path``.
 
         Args:
         article_json_path: str
@@ -49,18 +46,27 @@ class ArticleGenerator:
         self.model_name: str = model_name
         self.temperature: float = temperature
 
-        with open(article_json_path, "r") as f:
+        with open(article_json_path, "r", encoding="utf-8") as f:
             self.articles: dict = json.load(f)
 
         # Reads the API key from the environment variable
         # export OPENAI_API_KEY="your_api_key_here"
+        if os.getenv("OPENAI_API_KEY") is None:
+            raise RuntimeError(
+                "No OpenAI API key found. Please set the OPENAI_API_KEY environment variable."
+            )
+
+        from openai import OpenAI
+        from instructor import from_openai
+
         self.client = from_openai(OpenAI())
 
         self.system_prompt: str = (
-            """
-            You are a journalist for a reputable local news organization covering international conflicts. 
-            You are given old articles from yourself and based on these articles are to write new articles on different events that could happen in the same conflict in the same style. 
-            Do not rewrite the old articles, but use them as inspiration for new articles."""
+            "You are a journalist for a reputable local news organization covering "
+            "international conflicts. You are given old articles from yourself and "
+            "based on these articles are to write new articles on different events "
+            "that could happen in the same conflict in the same style. Do not "
+            "rewrite the old articles, but use them as inspiration for new articles."
         )
 
     def choose_random_articles(self) -> list[dict]:
@@ -94,16 +100,16 @@ class ArticleGenerator:
         """
         prompt = ""
 
-        # Only add the headline, subheadline and paragraphs to the prompt as the rest is extracted from the web page when analyzing unseen articles
+        # Only include fields available when analyzing unseen articles.
         for article in random_articles:
             prompt += f"Headline: {article['headline']}\n"
             prompt += f"Subheadline: {article['subheadline']}\n"
 
             # Remove lorem ipsum from paragraphs
-            article["paragraphs"] = article["paragraphs"].replace(
+            paragraphs = article["paragraphs"].replace(
                 "\nLorem ipsum dolor sit amet, consectetur.", ""
             )
-            prompt += f"Paragraphs: {article['paragraphs']}\n"
+            prompt += f"Paragraphs: {paragraphs}\n"
 
         return prompt
 
@@ -153,17 +159,19 @@ class ArticleGenerator:
 
         # Check if the file exists and create it if it does not
         if not os.path.exists(self.article_output_path):
-            with open(self.article_output_path, "w") as f:
+            with open(self.article_output_path, "w", encoding="utf-8") as f:
                 json.dump([], f)  # Create an empty JSON file
 
         # Append the generated articles to the JSON file
-        with open(self.article_output_path, "r") as f:
+        with open(self.article_output_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        with open(self.article_output_path, "w") as f:
+        with open(self.article_output_path, "w", encoding="utf-8") as f:
             data += article_list
             json.dump(data, f)
 
     def generate_once(self):
+        """Generate one response and append it to the configured output file."""
+
         # Sample random articles
         random_articles: list[dict] = self.choose_random_articles()
 
@@ -175,22 +183,19 @@ class ArticleGenerator:
         self.save_generated_articles(response)
 
     def generate(self, n: int):
-        """
-        Randomly samples articles from the JSON file and uses them for few shot prompting with the GPT model.
-        This is repeated times_to_generate times.
+        """Generate articles repeatedly with random few-shot samples.
 
         The input news articles are in a JSON file with the following structure:
             "$URL": {
             "url": "$URL",
-            "accessing-date": "$UTC_DATETIME_ACCESS",  # like "2024-08-25 12:34:14.660861+00:00"
-            "last-modification": "$UTC_DATETIME_MODIFICATION",  # like "2024-08-23T15:42:14+00:00"
+            "accessing-date": "$UTC_DATETIME_ACCESS",
+            "last-modification": "$UTC_DATETIME_MODIFICATION",
             "headline": "$HEADLINE",
             "subheadline": "$SUBHEADLINE",
             "paragraphs": "$PARAGRAPHS"
             }
 
-        Although the articles are in the JSON file, the GPT model will not have access to the URL, accessing-date and last-modification fields.
-        The GPT model will only have access to the headline, subheadline and paragraphs fields.
+        The GPT model only receives the headline, subheadline, and paragraphs.
 
         The output from GPT is a Pydantic model with the following structure:
             class ArticleGenerationPrompt(BaseModel):
@@ -200,7 +205,7 @@ class ArticleGenerator:
                     Paragraphs: str = Field(description="Paragraphs of the article")
                 articles: list[Article]
 
-        The generated articles are appended to a JSON file with the same structure, if it does not exist it should be created.
+        Generated articles are appended to the configured output JSON file.
 
         Args:
         n: int
@@ -209,7 +214,9 @@ class ArticleGenerator:
         for i in range(0, n):
             self.generate_once()
             print(
-                f"Generated articles: {i+1} out of {n} with {self.num_articles_to_choose} chosen each. Sum of articles generated: {self.num_articles_to_choose*(i+1)}"
+                f"Generated articles: {i + 1} out of {n} with "
+                f"{self.num_articles_to_choose} chosen each. Sum of articles "
+                f"generated: {self.num_articles_to_choose * (i + 1)}"
             )
 
         print(
@@ -217,11 +224,9 @@ class ArticleGenerator:
         )
 
     def create_message_generator(self, n: int):
-        """
-        Creates a generator of the messages to be used with instructor's BatchJob which then sends the batch request to the OpenAI API.
-        """
+        """Yield chat messages for Instructor batch generation requests."""
 
-        for i in range(0, n):
+        for _ in range(0, n):
             random_articles: list[dict] = self.choose_random_articles()
             prompt = self.create_openai_prompt(random_articles)
 
@@ -236,6 +241,7 @@ class ArticleGenerator:
         """
         Sends a batch request to the OpenAI API with the prompts in the batch file.
         """
+        from instructor.batch import BatchJob
 
         BatchJob.create_from_messages(
             messages_batch=message_generator,
@@ -245,8 +251,7 @@ class ArticleGenerator:
         )
 
     def read_batch_response_jsonl(self, batch_response_path: str):
-        """
-        Reads the JSON line file with the batch response from the OpenAI API and returns the responses.
+        """Read an OpenAI batch response JSONL file and save parsed articles.
 
         Args:
         batch_response_path: str
@@ -256,8 +261,9 @@ class ArticleGenerator:
         list[ArticleGenerationPrompt]
             List of the generated articles in the pydantic model format
         """
+        from instructor.batch import BatchJob
 
-        parsed, unparsed = BatchJob.parse_from_file(
+        parsed, _unparsed = BatchJob.parse_from_file(
             file_path=batch_response_path, response_model=ArticleCorpus
         )
         for i, article in enumerate(parsed):

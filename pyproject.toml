@@ -6,12 +6,46 @@ authors = ["Maximilian <Roth-Maximilian-Outpost@protonmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.11,<3.14"
 scrapy = "^2.11.2"
 openai = "^1.45.0"
 pydantic = "^2.9.1"
 instructor = "^1.4.2"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+black = "^25.9.0"
+pylint = "^3.3.8"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.black]
+line-length = 88
+
+[tool.pylint.main]
+persistent = false
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint."messages control"]
+disable = [
+    "duplicate-code",
+    "import-outside-toplevel",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "missing-module-docstring",
+    "abstract-method",
+    "arguments-differ",
+    "too-few-public-methods",
+    "too-many-arguments",
+    "too-many-instance-attributes",
+    "too-many-locals",
+    "too-many-positional-arguments",
+    "unused-argument",
+]
 
 [build-system]
 requires = ["poetry-core"]

@@ -6,9 +6,6 @@ unchanged. They are kept so crawler-wide behavior can be added in one place.
 
 from scrapy import signals
 
-# useful for handling different item types with a single interface
-from itemadapter import is_item, ItemAdapter
-
 
 class HiikHelperSpiderMiddleware:
     """Spider middleware that preserves Scrapy's default spider behavior."""
@@ -42,8 +39,7 @@ class HiikHelperSpiderMiddleware:
         # it has processed the response.
 
         # Must return an iterable of Request, or item objects.
-        for i in result:
-            yield i
+        yield from result
 
     def process_spider_exception(self, response, exception, spider):
         """Leave spider exceptions for Scrapy's default handling."""
@@ -52,7 +48,7 @@ class HiikHelperSpiderMiddleware:
         # (from other spider middleware) raises an exception.
 
         # Should return either None or an iterable of Request or item objects.
-        pass
+        return None
 
     def process_start_requests(self, start_requests, spider):
         """Yield initial spider requests unchanged."""
@@ -62,13 +58,12 @@ class HiikHelperSpiderMiddleware:
         # that it doesn’t have a response associated.
 
         # Must return only requests (not items).
-        for r in start_requests:
-            yield r
+        yield from start_requests
 
     def spider_opened(self, spider):
         """Log when Scrapy opens a spider."""
 
-        spider.logger.info("Spider opened: %s" % spider.name)
+        spider.logger.info("Spider opened: %s", spider.name)
 
 
 class HiikHelperDownloaderMiddleware:
@@ -122,9 +117,9 @@ class HiikHelperDownloaderMiddleware:
         # - return None: continue processing this exception
         # - return a Response object: stops process_exception() chain
         # - return a Request object: stops process_exception() chain
-        pass
+        return None
 
     def spider_opened(self, spider):
         """Log when Scrapy opens a spider."""
 
-        spider.logger.info("Spider opened: %s" % spider.name)
+        spider.logger.info("Spider opened: %s", spider.name)
