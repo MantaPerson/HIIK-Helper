@@ -16,7 +16,7 @@ class ArticleGenerator:
         article_output_path: str = "generated_articles.json",
         num_articles_to_choose: int = 3,
         model_name: str = "gpt-4o-mini",
-        temperature: float = 0,
+        temperature: float = 0.0,
     ):
         """
         Uses a GPT model to generate more articles based on the articles given in the JSON file under the path article_json_path.
@@ -212,7 +212,7 @@ class ArticleGenerator:
             f"{n} times generated and saved successfully under {self.article_output_path}."
         )
 
-    def create_message_generator(self, n: int, custom_id_prefix: str = "request"):
+    def create_message_generator(self, n: int):
         """
         Creates a generator of the messages to be used with instructor's BatchJob which then sends the batch request to the OpenAI API.
         """

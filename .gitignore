@@ -26,8 +26,13 @@ data/created_articles/batch_data/batch_C.jsonl
 data/created_articles/batch_data/batch_D.jsonl
 data/created_articles/batch_data/old_batch_a_old.jsonl
 data/created_articles/batch_data/old_batch_b_old.jsonl
+data/
 hiik_helper/article_generator_openai/__pycache__/article_generator.cpython-311.pyc
 hiik_helper/pydantic_models/__pycache__/__init__.cpython-311.pyc
 hiik_helper/pydantic_models/__pycache__/article_corpus_model.cpython-311.pyc
 batch_file.jsonl
 generated_articles.json
+found_articles.json
+visited_urls.json
+hiik_helper/pydantic_models/__pycache__/hiik_corpus.cpython-311.pyc
+hiik_helper/pydantic_models/__pycache__/hiik_parameters.cpython-311.pyc
