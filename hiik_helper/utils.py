@@ -1,3 +1,5 @@
+"""Utilities for reading and writing article, batch, and HIIK corpus files."""
+
 from pydantic_models.article_corpus_model import ArticleCorpus, Article
 from pydantic_models.hiik_corpus import HiikCorpus
 from pydantic import ValidationError

@@ -1,7 +1,8 @@
-# Define here the models for your spider middleware
-#
-# See documentation in:
-# https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+"""Scrapy middleware hooks for the HIIK Helper crawler.
+
+The middleware classes currently pass requests, responses, and items through
+unchanged. They are kept so crawler-wide behavior can be added in one place.
+"""
 
 from scrapy import signals
 
@@ -10,18 +11,24 @@ from itemadapter import is_item, ItemAdapter
 
 
 class HiikHelperSpiderMiddleware:
+    """Spider middleware that preserves Scrapy's default spider behavior."""
+
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the spider middleware does not modify the
     # passed objects.
 
     @classmethod
     def from_crawler(cls, crawler):
+        """Create the middleware and connect spider lifecycle signals."""
+
         # This method is used by Scrapy to create your spiders.
         s = cls()
         crawler.signals.connect(s.spider_opened, signal=signals.spider_opened)
         return s
 
     def process_spider_input(self, response, spider):
+        """Allow each response to continue into the spider unchanged."""
+
         # Called for each response that goes through the spider
         # middleware and into the spider.
 
@@ -29,6 +36,8 @@ class HiikHelperSpiderMiddleware:
         return None
 
     def process_spider_output(self, response, result, spider):
+        """Yield spider output items and requests unchanged."""
+
         # Called with the results returned from the Spider, after
         # it has processed the response.
 
@@ -37,6 +46,8 @@ class HiikHelperSpiderMiddleware:
             yield i
 
     def process_spider_exception(self, response, exception, spider):
+        """Leave spider exceptions for Scrapy's default handling."""
+
         # Called when a spider or process_spider_input() method
         # (from other spider middleware) raises an exception.
 
@@ -44,6 +55,8 @@ class HiikHelperSpiderMiddleware:
         pass
 
     def process_start_requests(self, start_requests, spider):
+        """Yield initial spider requests unchanged."""
+
         # Called with the start requests of the spider, and works
         # similarly to the process_spider_output() method, except
         # that it doesn’t have a response associated.
@@ -53,22 +66,30 @@ class HiikHelperSpiderMiddleware:
             yield r
 
     def spider_opened(self, spider):
+        """Log when Scrapy opens a spider."""
+
         spider.logger.info("Spider opened: %s" % spider.name)
 
 
 class HiikHelperDownloaderMiddleware:
+    """Downloader middleware that preserves Scrapy's default request flow."""
+
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the downloader middleware does not modify the
     # passed objects.
 
     @classmethod
     def from_crawler(cls, crawler):
+        """Create the middleware and connect spider lifecycle signals."""
+
         # This method is used by Scrapy to create your spiders.
         s = cls()
         crawler.signals.connect(s.spider_opened, signal=signals.spider_opened)
         return s
 
     def process_request(self, request, spider):
+        """Allow outgoing requests to continue unchanged."""
+
         # Called for each request that goes through the downloader
         # middleware.
 
@@ -81,6 +102,8 @@ class HiikHelperDownloaderMiddleware:
         return None
 
     def process_response(self, request, response, spider):
+        """Return downloader responses unchanged."""
+
         # Called with the response returned from the downloader.
 
         # Must either;
@@ -90,6 +113,8 @@ class HiikHelperDownloaderMiddleware:
         return response
 
     def process_exception(self, request, exception, spider):
+        """Leave downloader exceptions for Scrapy's default handling."""
+
         # Called when a download handler or a process_request()
         # (from other downloader middleware) raises an exception.
 
@@ -100,4 +125,6 @@ class HiikHelperDownloaderMiddleware:
         pass
 
     def spider_opened(self, spider):
+        """Log when Scrapy opens a spider."""
+
         spider.logger.info("Spider opened: %s" % spider.name)

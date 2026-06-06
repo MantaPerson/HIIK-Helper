@@ -1,3 +1,5 @@
+"""OpenAI-backed synthetic article generation utilities."""
+
 import json
 import random
 from typing import Any
@@ -10,6 +12,8 @@ from pydantic_models.article_corpus_model import ArticleCorpus
 
 
 class ArticleGenerator:
+    """Generate or batch-generate synthetic articles from scraped examples."""
+
     def __init__(
         self,
         article_json_path: str = "found_articles.json",

@@ -1,3 +1,5 @@
+"""Experimental XML feed spider for article feed parsing."""
+
 import scrapy
 import json
 import re
@@ -16,11 +18,19 @@ from scrapy.signalmanager import dispatcher
 
 
 class HiikXmlSpider(scrapy.spiders.XMLFeedSpider):
+    """Parse item nodes from an XML feed.
+
+    This spider is currently a scaffold and is not wired into the normal crawl
+    workflow.
+    """
+
     name = "HIIK XML Spider"
 
     def __init__(
         self, start_urls: list[str], allowed_domains: list[str], *args, **kwargs
     ):
+        """Initialize feed targets and connect the spider-close signal."""
+
         logger.info("Initializing spider")
         super(scrapy.spiders.XMLFeedSpider, self).__init__(*args, **kwargs)
         # Add spider close handler to save the found articles to a JSON file
@@ -44,6 +54,8 @@ class HiikXmlSpider(scrapy.spiders.XMLFeedSpider):
     #     }
 
     def parse_node(self, response, node):
+        """Parse a single XML item node into a minimal title/link record."""
+
         self.logger.info(
             "Hi, this is a <%s> node!: %s", self.itertag, "".join(node.getall())
         )
@@ -52,8 +64,10 @@ class HiikXmlSpider(scrapy.spiders.XMLFeedSpider):
             "title": node.xpath("ns:title/text()", namespaces=self.namespaces).get(),
             "link": node.xpath("ns:link/text()", namespaces=self.namespaces).get(),
         }
-    
+
     def spider_closing(self):
+        """Placeholder close hook for future XML crawl output persistence."""
+
         # logger.info("Saving found articles to JSON")
         # with open("found_articles.json", "w") as f:
         #     json.dump(self.found_articles, f)

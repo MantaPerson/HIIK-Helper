@@ -1,3 +1,5 @@
+"""Script helpers for generating synthetic articles or parsing batch output."""
+
 from article_generator import ArticleGenerator
 from pydantic_models.article_corpus_model import (
     ArticleCorpus,
@@ -6,6 +8,7 @@ from pydantic_models.article_corpus_model import (
 
 
 def run_article_generator():
+    """Configure and run the selected article-generation workflow."""
 
     # Name of the GPT model to use
     model_name = "gpt-4o-mini"

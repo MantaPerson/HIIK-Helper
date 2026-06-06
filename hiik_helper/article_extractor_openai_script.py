@@ -1,3 +1,5 @@
+"""Script helpers for preparing and parsing OpenAI HIIK extraction batches."""
+
 from article_extractor_openai import ArticleExtractor
 from pydantic_models.hiik_corpus import (
     HiikCorpus,
@@ -10,7 +12,6 @@ from utils import (
     save_hiik_corpus_to_jsonl,
     read_hiik_corpus_jsonl_to_hiik_corpus,
 )
-
 
 input_article_batch_file_path = "generated_articles.json"
 index = "C"

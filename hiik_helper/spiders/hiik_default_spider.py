@@ -1,3 +1,5 @@
+"""Default Scrapy spider for discovering and extracting Karen News articles."""
+
 import scrapy
 import json
 import re
@@ -14,11 +16,15 @@ from scrapy.signalmanager import dispatcher
 
 
 class HiikDefaultSpider(scrapy.Spider):
+    """Crawl article pages and persist discovered article content as JSON."""
+
     name = "HIIK Default Spider"
 
     def __init__(
         self, start_urls: list[str], allowed_domains: list[str], *args, **kwargs
     ):
+        """Initialize crawl targets, URL state, and extraction selectors."""
+
         logger.info("Initializing spider")
         super(HiikDefaultSpider, self).__init__(*args, **kwargs)
         # Add spider close handler to save the found articles to a JSON file
@@ -46,6 +52,8 @@ class HiikDefaultSpider(scrapy.Spider):
         logger.info("Spider initialized")
 
     def parse(self, response):
+        """Parse a response as an article or list page and follow article links."""
+
         article_links: set = set()
 
         url = response.url
@@ -120,49 +128,67 @@ class HiikDefaultSpider(scrapy.Spider):
             yield response.follow(link, callback=self.parse)
 
     def current_page_is_article(self, response):
+        """Return whether the response contains the configured article body."""
+
         # Check if the current page is an article
         if response.xpath(f'//div[@class="{self.content_class_article}"]'):
             return True
         return False
 
     def current_page_is_list(self, response):
+        """Return whether the response contains a list of article excerpts."""
+
         # Check if the current page is a list of articles
         if response.xpath(f'//div[@class="{self.content_class_list}"]'):
             return True
         return False
 
     def parse_article(self, response):
+        """Extract raw article content blocks from an article response."""
+
         # Parse the article content
         # Mocked implementation
         return response.xpath(f'//div[@class="{self.content_class_article}"]').getall()
 
     def parse_article_list(self, response):
+        """Extract raw article list blocks from a list response."""
+
         # Parse the article content
         # Mocked implementation
         return response.xpath(f'//div[@class="{self.content_class_list}"]').getall()
 
     def link_is_article(self, url):
+        """Return whether a URL matches the configured article URL patterns."""
+
         # Check if the link is an article
         for article_link_domain in self.article_link_domains:
             if article_link_domain in url:
                 return True
 
     def article_contains_more_link(self, article):
+        """Return whether an article excerpt contains a read-more link."""
+
         # Check if the article contains a more link
         # Mocked implementation
         return "more-link button" in article
 
     def get_url_in_article(self, article):
+        """Extract the first linked URL from a raw article excerpt."""
+
         # Get the more link in the article
         url = re.findall(r'href="([^"]*)"', article)[0]
         return url
 
     def clean_text_from_html(self, text):
+        """Remove HTML tags from a string."""
+
         # Clean the text from HTML tags
         # Mocked implementation
         return re.sub(r"<[^>]*>", "", text)
 
     def save_found_articles_to_json(self):
+        """Merge newly found articles into `found_articles.json`."""
+
         json_file_name = "found_articles.json"
 
         # Save the found articles to a JSON file
@@ -175,6 +201,8 @@ class HiikDefaultSpider(scrapy.Spider):
             json.dump(data, f, indent=4)
 
     def save_visited_urls_to_json(self):
+        """Persist URLs visited during this crawl into `visited_urls.json`."""
+
         json_file_name = "visited_urls.json"
 
         self.visited_json_urls.extend(self.visited_urls_this_scrape)
@@ -184,6 +212,8 @@ class HiikDefaultSpider(scrapy.Spider):
             json.dump(list(self.visited_json_urls), f, indent=4)
 
     def spider_closing(self, spider):
+        """Persist crawl state when Scrapy closes the spider."""
+
         logger.info("Spider closing")
 
         logger.info(f"Saving visited URLs to JSON")

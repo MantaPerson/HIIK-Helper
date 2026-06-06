@@ -1,3 +1,5 @@
+"""Command-line entrypoint for running the default HIIK Scrapy crawler."""
+
 from scrapy.crawler import CrawlerProcess, CrawlerRunner
 from scrapy.utils.project import get_project_settings
 from spiders.hiik_default_spider import HiikDefaultSpider
@@ -14,6 +16,8 @@ logger.info("Logger set up")
 
 
 def main():
+    """Configure Scrapy settings and crawl Karen News with the default spider."""
+
     # start_urls = ["https://karennews.org/post-sitemap3.xml"]
     start_urls = ["https://karennews.org/"]
     allowed_domains = ["karennews.org"]

@@ -1,3 +1,5 @@
+"""OpenAI batch request builder for extracting HIIK parameters from articles."""
+
 from openai import OpenAI
 from instructor.batch import BatchJob
 from instructor import from_openai
@@ -6,6 +8,8 @@ import os
 
 
 class ArticleExtractor:
+    """Create structured extraction requests for a corpus of HIIK articles."""
+
     def __init__(self, model_name: str = "gpt-4o-mini", temperature: float = 0.0):
         """
         The ArticleExtractor will extract the information from the articles using the GPT model.

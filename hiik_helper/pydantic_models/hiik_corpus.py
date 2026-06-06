@@ -1,3 +1,5 @@
+"""Pydantic models for HIIK-style article and conflict-event parameters."""
+
 from typing import Optional
 from pydantic import BaseModel, Field
 from pydantic_models.article_corpus_model import ArticleCorpus, Article
@@ -131,6 +133,8 @@ class HiikCorpus(BaseModel):
 
 
 def read_article_corpus_into_hiik_articles(article_corpus: ArticleCorpus):
+    """Wrap plain article records in empty HIIK article shells."""
+
     hiik_article_corpus = HiikCorpus(articles=[])
     for article_corpus_article in article_corpus.articles:
         hiik_article = HiikCorpus.HiikArticle(
